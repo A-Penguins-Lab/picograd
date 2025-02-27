@@ -1,8 +1,8 @@
-# PicoGrad
-A minimal implementation of pytorch's autograd with full GPU compatibility
+## PicoGrad  
+A minimal implementation of PyTorch's autograd with full GPU compatibility  
 
-# To do list
-[] setup - primitive file structure 
-[] setup blog
-[] Build the tensor object
-[] Write unit tests
+## To-Do List  
+- [ ] Set up the project structure  
+- [ ] Set up a blog  
+- [ ] Build the Tensor object  
+- [ ] Write unit tests  
