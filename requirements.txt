@@ -1,3 +1,5 @@
 numpy
 triton
 torch
+cupy
+graphviz

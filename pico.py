@@ -1,16 +1,17 @@
+## PicoTensor: PicoGrad v0
+
 import time
 import numpy as np
 import cProfile
 import numpy as np
 
-
 class Tensor:
-    def __init__(self, data, label='', _op='', _children=()):
-        
+    def __init__(self, data, _children=(), _op='', label='', dtype=''):
         ## This if for CPU
         self.data = np.array(data)
         self.grad = 0.0
         self.label = label
+        self.device = None
         
         self._backward = lambda: None
         self._op = _op
@@ -20,22 +21,49 @@ class Tensor:
         pass
 
     def __add__(self, other):
-        # assert (type(other) == Tensor, "Other is a tensor, op=add")
-        out = Tensor(self.data + other.data)
+
+        assert (type(other) == Tensor, "Other is a tensor, op=add")        
+        ## apparently we set the children here? 
+        out = Tensor(data = self.data + other.data, _children=(self, other), _op="+")
+
+        ## Backward function 
+        def _backward():
+            self.grad += 1.0 * other.grad
+            other.grad += 1.0 * other.grad
+        
+        out._backward = _backward
 
         return out
-    
+   
+   ## will come back to this 
     def __sub__(self, other):
-        # assert (type(other) == Tensor, "Other is a tensor op=sub")
-        out = Tensor(self.data - other.data)
+        assert isinstance(other, Tensor), "Other is a tensor op=sub"
+        out = Tensor(data = self.data + -other.data)
+        print(out)
 
         return out
+
     
     def __mul__(self, other):
-        # assert (type(other) == Tensor, "Other is a tensor, op=mul")
-        out = Tensor(self.data * other.data)
+        assert isinstance(other, Tensor), "Other is a tensor, op=mul"
+        out = Tensor(data=self.data * other.data, _children=(self, other), _op="*")
+        def _backward():
+            self.grad *= out.grad
+            other.grad *= out.grad
 
+        out._backward = _backward
         return out
+
+    def __neg__(self):
+        return self * -1
+
+    def __radd__(self, other):
+        assert (type(other) == Tensor, "Check whether object is tensor or not") 
+
+        return self + other
+    
+    def __sub__(self, other):
+        pass
 
     ## Indexing and slicing for tensor object
     def __getitem__(self, indices=None):
@@ -47,24 +75,32 @@ class Tensor:
 
         raise TypeError(f"Invalid index type: {type(indices)}")
 
+    # backward function for computing 
+    # gradients
     def backward(self):
-        pass
+        print("Visiting this function right now?")
 
-    def __repr__(self):
+        topo = []
+        visited = set()
+        
+        ## What does this do? Ik it constructs the backward graph
+        ## But how does it do it? what is topo sort? 
+        def build_topo_sort(v):
+            if v not in visited:
+                visited.add(v)
+                for child in v._prev:
+                    build_topo_sort(child)
+                
+                topo.append(v)
+
+        build_topo_sort(self)
+        
+        print(f"Topological graph for {self}: {topo}")
+        return topo
+
+    def __repr__(self):    
         return str(self.data)
 
 def tensor():
     pass
 
-if __name__ == "__main__":
-    start_time = time.time()
-    a = Tensor([2.0, 3.4], label='a')
-    b = Tensor([3.5, 3.5], label='b')
-    c = a + b
-
-    end_time = time.time()
-
-    ## This needs some speeding up
-    print(end_time - start_time)
-    print(c[1])
-    print(c, 'data: ', c.data, 'data type: ', type(c.data))
