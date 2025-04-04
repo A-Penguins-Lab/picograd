@@ -3,44 +3,73 @@
 import time
 import numpy as np
 import cProfile
+import logging
 import numpy as np
 
+from broadcast_utils import check_shapes, broadcast
+
 class Tensor:
-    def __init__(self, data, _children=(), _op='', label='', dtype=''):
+    def __init__(self, data, _children=(), _op='', label='', dtype=np.float64):
         ## This if for CPU
-        self.data = np.array(data)
+        
+        self.dtype = dtype
+        self.data = np.array(data, dtype=self.dtype)
         self.grad = 0.0
         self.label = label
         self.device = None
-        
-        self._backward = lambda: None
         self._op = _op
         self._prev = set(_children)
+    
+        self._properties()
 
-    def T(self):
-        pass
+    def _properties(self):
+        self._backward = lambda: None
+        self.dtype = self.data.dtype
+        self.shape = self.data.shape
+
+    def transpose(self):
+        if len(self.shape) >= 2:
+            print(self.data)
+
+    def copy(self):
+        print("Don't copy you donkey")
+        return Tensor( data = self.data ) 
+
+    def not_view(self, dims):
+        if isinstance(dims, tuple):
+            res = np.reshape(self.data, dims)
+            return Tensor( data = res )
+
+    def flatten(self):
+        res = self.not_view( dims = (-1,1) )
+        return Tensor( data = res )
 
     def __add__(self, other):
 
-        assert (type(other) == Tensor, "Other is a tensor, op=add")        
-        ## apparently we set the children here? 
-        out = Tensor(data = self.data + other.data, _children=(self, other), _op="+")
+        assert type(other) == Tensor, "Other is a tensor, op=add"
+        assert other.dtype == self.dtype, f"Other and me are of same dtype: {self.dtype}"
+
+        if check_shapes(self, other) == True:
+            out = Tensor(data = self.data + other.data, _children=(self, other), _op="+")
+        else:
+            ## Todo: add the backward flow for this
+            a_b, b_b = broadcast(self.data, other.data)
+            out = Tensor(data = a_b.data + b_b.data, _op='+')
 
         ## Backward function 
         def _backward():
-            self.grad += 1.0 * other.grad
-            other.grad += 1.0 * other.grad
+            self.grad += 1.0 * out.grad
+            other.grad += 1.0 * out.grad
         
         out._backward = _backward
 
         return out
-   
-   ## will come back to this 
+
+    ## will come back to this 
     def __sub__(self, other):
         assert isinstance(other, Tensor), "Other is a tensor op=sub"
         out = Tensor(data = self.data + -other.data)
-        print(out)
-
+        
         return out
 
     
@@ -54,17 +83,11 @@ class Tensor:
         out._backward = _backward
         return out
 
-    def __neg__(self):
-        return self * -1
 
     def __radd__(self, other):
-        assert (type(other) == Tensor, "Check whether object is tensor or not") 
-
+        assert type(other) == Tensor, "Check whether object is tensor or not"
         return self + other
     
-    def __sub__(self, other):
-        pass
-
     ## Indexing and slicing for tensor object
     def __getitem__(self, indices=None):
         if indices is None:
@@ -100,7 +123,4 @@ class Tensor:
 
     def __repr__(self):    
         return str(self.data)
-
-def tensor():
-    pass
-
+    
