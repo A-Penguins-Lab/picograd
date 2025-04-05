@@ -6,7 +6,7 @@ import cProfile
 import logging
 import numpy as np
 
-from broadcast_utils import check_shapes, broadcast
+from src.profiler import profile_op
 
 class Tensor:
     def __init__(self, data, _children=(), _op='', label='', dtype=np.float64):
@@ -27,6 +27,15 @@ class Tensor:
         self.dtype = self.data.dtype
         self.shape = self.data.shape
 
+    def _check_shapes(self, other):
+        return self.shape == other.shape
+    
+    ## Broadcasting utils - have to implement this on my own
+    def broadcast(self, a, b):
+        if isinstance(a, Tensor) and isinstance(b, Tensor):
+            a_b, b_b = np.broadcast_arrays(a, b)
+            return Tensor( data=a_b ), Tensor( data=b_b )
+
     def transpose(self):
         if len(self.shape) >= 2:
             print(self.data)
@@ -45,16 +54,18 @@ class Tensor:
         return Tensor( data = res )
 
     def __add__(self, other):
-
         assert type(other) == Tensor, "Other is a tensor, op=add"
         assert other.dtype == self.dtype, f"Other and me are of same dtype: {self.dtype}"
 
-        if check_shapes(self, other) == True:
-            out = Tensor(data = self.data + other.data, _children=(self, other), _op="+")
-        else:
-            ## Todo: add the backward flow for this
-            a_b, b_b = broadcast(self.data, other.data)
-            out = Tensor(data = a_b.data + b_b.data, _op='+')
+        try:
+            if self._check_shapes(other) == True:
+                out = Tensor(data = self.data + other.data, _children=(self, other), _op="+")
+            else:
+                ## Todo: add the backward flow for this
+                a_b, b_b = self.broadcast(self.data, other.data)
+                out = Tensor(data = a_b.data + b_b.data, _op='+')
+        except Exception as e:
+            raise e
 
         ## Backward function 
         def _backward():
