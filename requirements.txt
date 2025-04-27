@@ -3,3 +3,4 @@ triton
 torch
 cupy
 graphviz
+cProfile

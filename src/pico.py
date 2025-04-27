@@ -1,9 +1,5 @@
 ## PicoTensor: PicoGrad v0
-
 import time
-import numpy as np
-import cProfile
-import logging
 import numpy as np
 
 from src.profiler import profile_op
@@ -53,6 +49,8 @@ class Tensor:
         res = self.not_view( dims = (-1,1) )
         return Tensor( data = res )
 
+
+    @profile_op
     def __add__(self, other):
         assert type(other) == Tensor, "Other is a tensor, op=add"
         assert other.dtype == self.dtype, f"Other and me are of same dtype: {self.dtype}"
@@ -79,19 +77,50 @@ class Tensor:
     ## will come back to this 
     def __sub__(self, other):
         assert isinstance(other, Tensor), "Other is a tensor op=sub"
-        out = Tensor(data = self.data + -other.data)
+        assert other.dtype == self.dtype, f"Other and me dont have the same type {self.dtype} != {other.dtype}"
+        try:
+            if self._check_shapes(other) == True:
+                out = Tensor(data = self.data - other.data, _children = (self, other), _op='-')
+            else:
+                a_b, b_b = self.broadcast(self.data, other.data)
+                out = Tensor(data = a_b.data + b_b.data, _op = "-")
+
+        except Exception as e:
+            raise e
         
         return out
 
     
     def __mul__(self, other):
         assert isinstance(other, Tensor), "Other is a tensor, op=mul"
-        out = Tensor(data=self.data * other.data, _children=(self, other), _op="*")
+        assert other.dtype == self.dtype, f"Other and me dont have the same type (self.dtype} != {other.dtype}"
+
+        try:
+            if self._check_shapes(other) == True:
+                out = Tensor(data=self.data * other.data, _children=(self, other), _op="*")
+            else:
+                a_b, b_b = self.broadcast(self.data, other.data)
+                out = Tensor(data = a_b.data * b_b.data, _children = (a_b, b_b), _op='-')
+
+        except Exception as e:
+            raise e
+
         def _backward():
             self.grad *= out.grad
             other.grad *= out.grad
 
         out._backward = _backward
+        return out
+
+    def __truediv__(self, other):
+        out = Tensor(data = self.data  / other.data, _children=(self, other), _op='/')
+
+        def _backward():
+            self.grad /= out.grad
+            other.grad /= out.grad
+
+        out._backward = _backward
+
         return out
 
 
@@ -109,6 +138,27 @@ class Tensor:
 
         raise TypeError(f"Invalid index type: {type(indices)}")
 
+
+    ## Basic math ops section: For now all of these are numpy
+    ## Todo: tanh, sin, cosine
+    def log(self):
+        log_result = np.log(self.data)
+
+        out = Tensor(data=log_result, _children=(self,), _op='log')
+        return out
+
+    def exp(self):
+        exp_result = np.exp(self.data)
+
+        out = Tensor(data=exp_result, _children=(self,), _op='exp')
+        return out
+    
+    def sum(self):
+        sum_result = np.sum(self.data)
+
+        out = Tensor(data=sum_result, _children=(self,), _op='sum')
+        return out
+
     # backward function for computing 
     # gradients
     def backward(self):
@@ -116,6 +166,7 @@ class Tensor:
 
         topo = []
         visited = set()
+        visited_ops = set()
         
         ## What does this do? Ik it constructs the backward graph
         ## But how does it do it? what is topo sort? 
@@ -134,4 +185,3 @@ class Tensor:
 
     def __repr__(self):    
         return str(self.data)
-    
