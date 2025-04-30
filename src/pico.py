@@ -93,7 +93,7 @@ class Tensor:
     
     def __mul__(self, other):
         assert isinstance(other, Tensor), "Other is a tensor, op=mul"
-        assert other.dtype == self.dtype, f"Other and me dont have the same type (self.dtype} != {other.dtype}"
+        assert other.dtype == self.dtype, f"Other and me dont have the same type {self.dtype} != {other.dtype}"
 
         try:
             if self._check_shapes(other) == True:
