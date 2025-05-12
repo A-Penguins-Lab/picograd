@@ -3,6 +3,18 @@ from pstats import SortKey
 import functools
 from src.modes import SET_PROFILE_MODE
 
+'''
+A profiler is used to list down all the underlying function calls that are executed in the stack trace during a programs execution.
+The profiler section of picograd consists of two methods: 
+1. The PicoProfiler itself that can be used as a context manager like torch.autograd.profile()
+2. profile_op, that can be used as an decorator on top of operations to profile their working. 
+
+The 2nd approach can be used to profile custom operators that get dispatched as cuda/triton kernels
+The first approach can be commonly used to profile neural nets that are built using picoGrad. 
+
+'''
+
+
 if SET_PROFILE_MODE == True:
     print("------------------------PROFILER MODE ENABLED------------------------")
     print("To disable it, set SET_PFOILE_MODE=False in modes.py")
@@ -10,7 +22,8 @@ else:
     print("Profiler has been disabled, to enable it please go to modes and set SET_PROFILE_MODE=True")
 
 def profile_op(func):
-
+    '''
+    '''
     ## Wrapper function for the core op
     def wrapper(*args, **kwargs):
         
@@ -42,24 +55,21 @@ def profile_op(func):
 ## vizing profile logs, todo
 def vizualise_profile_logs(logs_file): #todo
     pass
-
             
 ## profiler class, honestly profilers needs to be its own
 ## subthing, not in a single file, it feels jank. 
 class PicoProfiler:
     ''' 
     
-        This class implements a context manager similar to torch.autograd.profile 
-        (dont quote me on the api)
+        This class implements a context manager similar to torch.autograd.profile()
+        (dont quote me on the api).
 
         Usage: 
         
         with PicoProfiler() as prof:
-
             a = pico.Tensor([2.0, 3.4], label='a')
             b = pico.Tensor([3.5, 3.5], label='b')
             c = a + b
-
     '''
     
     def __init__(self):
