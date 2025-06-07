@@ -60,7 +60,6 @@ def vizualise_profile_logs(logs_file): #todo
 ## subthing, not in a single file, it feels jank. 
 class PicoProfiler:
     ''' 
-    
         This class implements a context manager similar to torch.autograd.profile()
         (dont quote me on the api).
 

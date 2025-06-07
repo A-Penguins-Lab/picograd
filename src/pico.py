@@ -5,7 +5,6 @@ from src.profiler import profile_op
 from logger_setup import setup_logging
 from modes import SET_LOGGING_MODE
 
-
 pico_logger = setup_logging('pico.log')
 
 class Tensor:
@@ -40,7 +39,7 @@ class Tensor:
         
         self.dtype = dtype
         self.data = np.array(data, dtype=self.dtype)
-        self.grad = 0.0
+        self.grad = np.zeros_like(self.data)
         self.label = label
         self._op = _op
         self._prev = set(_children)
@@ -64,12 +63,19 @@ class Tensor:
             a_b, b_b = np.broadcast_arrays(a, b)
             return Tensor( data=a_b ), Tensor( data=b_b )
 
+    def max(self):
+        if len(self.data) > 1:
+            return max(self.data)
+        else:
+            return self.data[0]
+        
+
     def T(self):
         if len(self.shape) >= 2:
             print(self.data)
 
     def copy(self):
-        print("Don't copy you donkey")
+
         return Tensor( data = self.data )
 
     def not_view(self, dims):
@@ -170,7 +176,6 @@ class Tensor:
             return self.data[indices]
 
         raise TypeError(f"Invalid index type: {type(indices)}")
-
 
     ## Basic math ops section: For v0 all of these are numpy
     ## Todo: tanh, sin, cosine

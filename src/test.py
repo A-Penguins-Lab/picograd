@@ -5,7 +5,6 @@ from pico import Tensor
 Just unittests, idk how to write them. 
 '''
 
-
 class PicoTestCase(unittest.TestCase):
 
     def test_simple(self):
@@ -24,7 +23,6 @@ class PicoOpsTest(unittest.TestCase):
         self.assertTrue(t3._prev != None)
         self.assertTrue(t1._backward != None)
         self.assertTrue(t2._backward != None)
-
 
 if __name__ == "__main__":
     unittest.main()
