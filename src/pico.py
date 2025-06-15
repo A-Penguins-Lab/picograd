@@ -2,7 +2,7 @@
 import numpy as np
 
 from src.profiler import profile_op
-from logger_setup import setup_logging
+from src.logger_setup import setup_logging
 from modes import SET_LOGGING_MODE
 
 pico_logger = setup_logging('pico.log')
@@ -69,7 +69,6 @@ class Tensor:
         else:
             return self.data[0]
         
-
     def T(self):
         if len(self.shape) >= 2:
             print(self.data)

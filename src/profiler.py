@@ -1,6 +1,4 @@
 import cProfile, pstats, io
-from pstats import SortKey
-import functools
 from src.modes import SET_PROFILE_MODE
 
 '''
@@ -13,7 +11,6 @@ The 2nd approach can be used to profile custom operators that get dispatched as 
 The first approach can be commonly used to profile neural nets that are built using picoGrad. 
 
 '''
-
 
 if SET_PROFILE_MODE == True:
     print("------------------------PROFILER MODE ENABLED------------------------")

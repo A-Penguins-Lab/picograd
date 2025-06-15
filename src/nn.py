@@ -12,5 +12,12 @@ class Linear(PicoModule):
         super().__init__()
     
     def __call__(self, *args, **kwds):
-        return super().__call__(*args, **kwds)
-        
+        return NotImplemented("Please implement this as you like :)")        
+
+
+class SWiGLU(PicoModule):
+    pass
+
+
+class GLU(PicoModule):
+    pass
