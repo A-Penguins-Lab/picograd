@@ -47,7 +47,6 @@ class Tensor:
 
         pico_logger.info(f"[INIT]: Tensor created with label={label}, shape={self.shape}, dtype={self.dtype}")
 
-
     def _set_tensor_properties(self):
         self._backward = lambda: None
         self.dtype = self.data.dtype
@@ -245,3 +244,4 @@ class Tensor:
 
     def __repr__(self):    
         return str(self.data)
+

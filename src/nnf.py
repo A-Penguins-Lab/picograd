@@ -1,5 +1,6 @@
 import numpy as np
 
+## Local imports
 from pico import Tensor
 from error import InputException
 

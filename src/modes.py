@@ -10,3 +10,4 @@ These modes have to be set as global variables or the user should be given an op
 ## env file
 SET_PROFILE_MODE: bool = False
 SET_DEBUG_MODE: bool = True
+SET_GPU_BACKEND = 'cuda'
